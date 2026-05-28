@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Coda Hosted Component — playground</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #fafafa;
+            --panel: #fff;
+            --border: #e3e3e8;
+            --text: #1a1a1a;
+            --muted: #666;
+            --accent: #2c5cff;
+            --success: #1f8a3a;
+            --failure: #b3261e;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #131316;
+                --panel: #1c1c21;
+                --border: #2c2c33;
+                --text: #f0f0f3;
+                --muted: #9a9aa3;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font:
+                    14px/1.45 -apple-system,
+                    BlinkMacSystemFont,
+                    'Segoe UI',
+                    sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            font-size: 16px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        header .sub {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            padding: 16px;
+            min-height: calc(100vh - 57px);
+        }
+
+        @media (max-width: 639px) {
+            main {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            header {
+                padding: 12px 16px;
+            }
+
+            #checkout {
+                resize: none;
+            }
+        }
+
+        @media (min-width: 640px) {
+            main {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            main>section:last-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (min-width: 1100px) {
+            main {
+                grid-template-columns: 360px 1fr 360px;
+            }
+
+            main>section:last-child {
+                grid-column: auto;
+            }
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+        }
+
+        .panel h2 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--muted);
+            min-width: 0;
+        }
+
+        input,
+        select,
+        textarea {
+            font: inherit;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            width: 100%;
+            min-width: 0;
+        }
+
+        textarea {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .row>* {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        button {
+            font: inherit;
+            padding: 9px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button.secondary {
+            background: transparent;
+            color: var(--accent);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        #checkout {
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            position: relative;
+            height: 137px;
+            width: 100%;
+            min-width: 240px;
+            max-width: 100%;
+            overflow: auto;
+            transition: none;
+        }
+
+        #checkout:empty::before {
+            content: 'Mount target — click Mount to load the iframe';
+            color: var(--muted);
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+        }
+
+        #log {
+            flex: 1;
+            overflow-y: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+            min-height: 240px;
+        }
+
+        .entry {
+            padding: 6px 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .entry:last-child {
+            border-bottom: none;
+        }
+
+        .entry .ts {
+            color: var(--muted);
+            margin-right: 6px;
+        }
+
+        .entry .type {
+            font-weight: 600;
+        }
+
+        .entry.success .type {
+            color: var(--success);
+        }
+
+        .entry.failed .type,
+        .entry.error .type {
+            color: var(--failure);
+        }
+
+        .entry pre {
+            margin: 4px 0 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>Coda Hosted Component — playground</h1>
+    <span class="sub">Manual smoke-test for <code>.output/coda-component.min.js</code></span>
+</header>
+
+<main>
+    <section class="panel" aria-label="Configuration">
+        <h2>Config</h2>
+        <label>
+            SDK script URL
+            <input type="url" id="cfg-sdkUrl" spellcheck="false"
+                   value="https://hosted-component.codapayments-staging.com/0.2.3-dev.0-feature-combined-cpexl-2727-2758-b60b0d2/hosted-component.min.js" />
+        </label>
+        <label>
+            Client secret (JWT)
+            <textarea id="cfg-clientSecret" rows="4"
+                      placeholder="Paste JWT from Charge/intent — payload must contain txn_id and iss"></textarea>
+        </label>
+        <div class="actions">
+            <button id="btn-mount" type="button">Mount</button>
+            <button id="btn-unmount" type="button" class="secondary" disabled>Unmount</button>
+        </div>
+    </section>
+
+    <section class="panel" aria-label="Mount target">
+        <h2>Iframe</h2>
+        <div id="checkout"></div>
+    </section>
+
+    <section class="panel" aria-label="Event log">
+        <h2>Events</h2>
+        <div id="log" aria-live="polite"></div>
+        <button id="btn-clear" type="button" class="secondary">Clear log</button>
+    </section>
+</main>
+
+<script>
+    const DEFAULT_SDK_URL =
+        'https://hosted-component.codapayments-staging.com/0.2.3-dev.0-feature-combined-cpexl-2727-2758-b60b0d2/hosted-component.min.js';
+
+    const $ = (id) => document.getElementById(id);
+    const logEl = $('log');
+    const mountBtn = $('btn-mount');
+    const unmountBtn = $('btn-unmount');
+
+    let charge = null;
+    let loadedSdkUrl = null;
+
+    function logEvent(type, detail) {
+        const entry = document.createElement('div');
+        entry.className = `entry ${type}`;
+        const ts = new Date().toISOString().slice(11, 23);
+        entry.innerHTML =
+            `<span class="ts">${ts}</span><span class="type">${type}</span>` +
+            (detail && Object.keys(detail).length
+                ? `<pre>${JSON.stringify(detail, null, 2)}</pre>`
+                : '');
+        logEl.prepend(entry);
+    }
+
+    function resolveSdkUrl() {
+        const input = $('cfg-sdkUrl').value.trim();
+        return input || DEFAULT_SDK_URL;
+    }
+
+    function shouldLoadSdk(url) {
+        return url !== loadedSdkUrl || typeof CodaComponent !== 'function';
+    }
+
+    function loadSdkScript(url) {
+        return new Promise((resolve, reject) => {
+            const existing = document.querySelector('script[data-hc-sdk="true"]');
+            if (existing) {
+                existing.remove();
+            }
+            if (window.CodaComponent) {
+                delete window.CodaComponent;
+            }
+            loadedSdkUrl = null;
+
+            const script = document.createElement('script');
+            script.src = url;
+            script.setAttribute('data-hc-sdk', 'true');
+            script.onload = () => {
+                if (typeof CodaComponent !== 'function') {
+                    reject(new Error('CodaComponent global missing after script load'));
+                    return;
+                }
+                loadedSdkUrl = url;
+                resolve();
+            };
+            script.onerror = () => reject(new Error(`Failed to load SDK script: ${url}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    async function ensureSdkLoaded() {
+        const sdkUrl = resolveSdkUrl();
+        if (!shouldLoadSdk(sdkUrl)) {
+            return sdkUrl;
+        }
+        logEvent('info', { message: 'Loading SDK script', url: sdkUrl });
+        await loadSdkScript(sdkUrl);
+        logEvent('success', { message: 'SDK script loaded', url: sdkUrl });
+        return sdkUrl;
+    }
+
+    function mountComponent(clientSecret) {
+        charge = CodaComponent().components({ clientSecret }).create('charge');
+        ['userLoaded', 'success', 'failed'].forEach((evt) => {
+            charge.on(evt, (detail) => logEvent(evt, detail));
+        });
+        charge.mount('#checkout');
+        logEvent('mounted', {});
+        mountBtn.disabled = true;
+        unmountBtn.disabled = false;
+    }
+
+    mountBtn.addEventListener('click', async () => {
+        if (charge) return;
+        const clientSecret = $('cfg-clientSecret').value.trim();
+        if (!clientSecret) {
+            logEvent('error', { code: 'ERR_LOCAL', message: 'clientSecret required' });
+            return;
+        }
+
+        mountBtn.disabled = true;
+        try {
+            await ensureSdkLoaded();
+            mountComponent(clientSecret);
+        } catch (err) {
+            logEvent('error', { code: 'ERR_MOUNT', message: String(err) });
+            charge = null;
+            mountBtn.disabled = false;
+        }
+    });
+
+    unmountBtn.addEventListener('click', () => {
+        if (!charge) return;
+        charge.unmount();
+        charge = null;
+        logEvent('unmounted', {});
+        mountBtn.disabled = false;
+        unmountBtn.disabled = true;
+    });
+
+    $('btn-clear').addEventListener('click', () => {
+        logEl.innerHTML = '';
+    });
+</script>
+</body>
+
+</html>
